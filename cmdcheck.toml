@@ -1,0 +1,72 @@
+# This file is validated and compiled into the binary. Runtime never reads it.
+ollama_url = "http://localhost:11434"
+model = "nimble"
+timeout_ms = 3000
+keep_alive = "30m"
+on_error = "ask"                  # allow | ask | deny
+on_pass = "allow"                 # allow | ask
+
+# Extra policy supplied to Nimble for every decision.
+special_instructions = [
+  # "All kubectl commands must include --context development.",
+]
+special_instructions_deny_threshold = 0.70
+
+[script_inspection]
+max_file_bytes = 262144
+max_total_bytes = 524288
+max_depth = 4
+max_scripts = 16
+on_truncated = "ask"              # allow | ask | deny
+on_unreadable = "ask"             # allow | ask | deny
+on_dynamic_child = "ask"          # allow | ask | deny
+on_limit = "ask"                  # depth, count, or total-byte limit
+
+[harm]
+enabled = true
+deny_threshold = 0.70
+instructions = "Could executing this command cause destructive, disruptive, security, privacy, or unintended harm to the local system, its data, credentials, or an external system? Normal read-only development commands are not harmful."
+
+[proxy]
+enabled = true
+required_proxy = "http://127.0.0.1:8080"
+network_threshold = 0.60
+compliance_threshold = 0.70
+# Describe the required route in terms the model can verify from a command.
+instructions = "Every command that initiates a network connection, on any port or protocol, must explicitly route through the required proxy. Environment variables that are only assigned but not exported do not count. A trusted wrapper prefix means that wrapper is configured for the required proxy."
+trusted_prefixes = [
+  "proxychains4 ",
+  "proxychains ",
+]
+
+[proxy.preflight]
+enabled = false
+# Set both values when enabling. The check itself is sent through proxy_url.
+proxy_url = "http://127.0.0.1:8080"
+check_url = "https://example.com/"
+timeout_ms = 2000
+ttl_seconds = 60
+
+# Rules are evaluated in order and skip script inspection and the model. The
+# first match wins; put a narrow allow before a broader deny to approve it.
+# Deterministic deny rules belong here so safety does not depend on a score.
+[[exceptions]]
+action = "deny"
+match = "regex"
+pattern = "(^|[;&|]\\s*)(sudo\\s+)?rm\\s+(?:-[^\\s]+\\s+)*(?:-[^-\\s]*r[^\\s]*|--recursive)(?:\\s|$)"
+reason = "Recursive deletion requires explicit approval"
+
+# Example allow rule:
+# [[exceptions]]
+# action = "allow"
+# match = "prefix"
+# pattern = "cargo test"
+# reason = "Local test command"
+
+# Custom questions describe an undesirable condition. The command is denied
+# when Nimble's probability of true reaches deny_threshold.
+# [[custom_questions]]
+# name = "production_access"
+# instructions = "Does this command target a production environment?"
+# deny_threshold = 0.70
+# deny_reason = "Production access is not permitted"

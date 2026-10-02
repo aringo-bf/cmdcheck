@@ -1,0 +1,23 @@
+[package]
+name = "cmdcheck"
+version = "0.1.0"
+edition = "2021"
+description = "Fast Ollama/Nimble command policy hook"
+license = "MIT"
+build = "build.rs"
+
+[dependencies]
+regex = "1.11"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ureq = { version = "2.12", features = ["json"] }
+
+[build-dependencies]
+regex = "1.11"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+[profile.release]
+lto = "thin"
+strip = true

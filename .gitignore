@@ -1,0 +1,26 @@
+# Rust build output
+/target/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs and coverage output
+*.log
+/coverage/
+/tarpaulin-report.html
+
+# Local planning and source-reference notes
+/plan.md
+/docs
